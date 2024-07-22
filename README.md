@@ -24,14 +24,15 @@ Steps to install and run the project:
 3.	Download the client code:
   Git link: https://github.com/adima1/Client_TripTips.git
 4.	Start the server using the commands:
+   - npm install express
+   - npm run start
+
+6.	Start the client using the commands:
+   - npm install
   o	npm run start
 
-5.	Start the client using the commands:
-  o	npm install
-  o	npm run start
-
-6.	Click the link that leads to the registration screen after the site opens on the login screen.
-7.	Enter user details to register on the site. After a successful registration, you will be redirected to the login screen.
-8.	Enter the username and email that were registered in the system into the appropriate fields on the login screen.
-9.	Navigate to the home page after a successful login with valid credentials.
-10.	Click on the question mark icon in the navigation bar to go to the About page.
+8.	Click the link that leads to the registration screen after the site opens on the login screen.
+9.	Enter user details to register on the site. After a successful registration, you will be redirected to the login screen.
+10.	Enter the username and email that were registered in the system into the appropriate fields on the login screen.
+11.	Navigate to the home page after a successful login with valid credentials.
+12.	Click on the question mark icon in the navigation bar to go to the About page.
