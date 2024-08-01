@@ -45,13 +45,13 @@ const storage = multer.diskStorage({
     },
     filename: function (req, file, cb) {
       cb(null, file.originalname);
-    },
+    }
   });
   const upload = multer({ storage });
-  
+
 /*ROUTES WHIT FILES*/
 app.post("/auth/register", upload.single("picture"), register);
-app.post("/posts",verifyToken, upload.single("picture"), createPost);
+app.post("/posts", verifyToken, upload.single("picture"), createPost);
 
 /*ROUTES*/
 app.use("/auth", authRoutes);
@@ -60,7 +60,7 @@ app.use("/posts", postRoutes);
 
 
 /*MONGOOSE SETUP*/
-const PORT=process.env.PORT || 6001;
+const PORT = process.env.PORT || 6001;
 mongoose.connect(process.env.MONGO_URL)
 .then(() => {
   app.listen(PORT, () => console.log(`Server running on port: ${PORT}`));

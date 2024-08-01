@@ -16,7 +16,7 @@ export const createPost = async (req, res) => {
       /*userPicturePath: user.picturePath,
       picturePath,*/
       likes: {}, // לייקים ריקים בהתחלה
-      comments: [], // תגובות ריקות בהתחלה
+      comments: [] // תגובות ריקות בהתחלה
     });
     await newPost.save(); // שמירת הפוסט החדש בבסיס הנתונים
 

@@ -1,7 +1,7 @@
 import bcrypt from "bcrypt"; // יבוא של ספריית bcrypt לצורך הצפנת סיסמאות
 import jwt from "jsonwebtoken"; // יבוא של ספריית jsonwebtoken ליצירת טוקנים
 import User from "../models/User.js"; // יבוא של מודל המשתמש שנוצר במסד הנתונים
-import dotenv from 'dotenv'; // יבוא של dotenv לטעינת משתני סביבה
+import dotenv from "dotenv"; // יבוא של dotenv לטעינת משתני סביבה
 
 dotenv.config(); // טוען את משתני הסביבה מקובץ .env
 
@@ -16,7 +16,7 @@ export const register = async (req, res) => {
       password,
       friends,
       location,
-      occupation,
+      occupation
     } = req.body;
 
     // יצירת מלח לצורך הצפנת הסיסמה
@@ -34,7 +34,7 @@ export const register = async (req, res) => {
       location,
       occupation,
       viewedProfile: Math.floor(Math.random() * 10000), // יצירת מספר אקראי לפרופיל צפוי
-      impressions: Math.floor(Math.random() * 10000), // יצירת מספר אקראי לרושם
+      impressions: Math.floor(Math.random() * 10000) // יצירת מספר אקראי לרושם
     });
 
     // שמירת המשתמש החדש במסד הנתונים
@@ -54,7 +54,7 @@ export const login = async (req, res) => {
 
     const { email, password } = req.body;
     console.log("Finding user with email:", email);
-    const user = await User.findOne({ email: email });
+    const user = await User.findOne({ email });
 
     if (!user) {
       console.error("User does not exist"); // לוג: משתמש לא קיים
@@ -70,7 +70,7 @@ export const login = async (req, res) => {
     }
 
     console.log("Creating JWT token");
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' }); // הוספת אפשרות לפקיעת תוקף
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "1h" }); // הוספת אפשרות לפקיעת תוקף
 
     const userResponse = {
       id: user._id,
@@ -81,7 +81,7 @@ export const login = async (req, res) => {
       location: user.location,
       occupation: user.occupation,
       viewedProfile: user.viewedProfile,
-      impressions: user.impressions,
+      impressions: user.impressions
     };
 
     console.log("User logged in:", userResponse); // לוג: משתמש התחבר בהצלחה

@@ -20,8 +20,8 @@ export const getUserFriends = async (req, res) => {
       user.friends.map((id) => User.findById(id)) // חיפוש כל החברים של המשתמש לפי מזהים
     );
     const formattedFriends = friends.map(
-      ({ _id, firstName, lastName, occupation, location/*, picturePath */}) => {
-        return { _id, firstName, lastName, occupation, location/*, picturePath */}; // עיצוב האובייקטים של החברים לפורמט מסוים
+      ({ _id, firstName, lastName, occupation, location/*, picturePath */ }) => {
+        return { _id, firstName, lastName, occupation, location/*, picturePath */ }; // עיצוב האובייקטים של החברים לפורמט מסוים
       }
     );
     res.status(200).json(formattedFriends); // שליחת רשימת החברים המפורמטת כתגובה במצב 200 (הצלחה)
@@ -52,7 +52,7 @@ export const addRemoveFriend = async (req, res) => {
     );
     const formattedFriends = friends.map(
       ({ _id, firstName, lastName, occupation, location/*, picturePath*/ }) => {
-        return { _id, firstName, lastName, occupation, location/*, picturePath */}; // עיצוב האובייקטים של החברים לפורמט מסוים
+        return { _id, firstName, lastName, occupation, location/*, picturePath */ }; // עיצוב האובייקטים של החברים לפורמט מסוים
       }
     );
 
