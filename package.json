@@ -21,7 +21,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node index.js",
-    "lint": "eslint \"**/*.{js,jsx}\" "
+    "lint": "eslint \"**/*.{js,jsx}\" ",
+    "lintfix": "eslint \"**/*.{js,jsx}\"  --fix"
+
 
   },
   "keywords": [],
