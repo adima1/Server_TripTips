@@ -1,0 +1,25 @@
+{
+    "env": {
+        "es2021": true,
+        "node": true
+    },
+    "extends": [
+        "standard"
+    ],
+    "parserOptions": {
+        "ecmaVersion": 15
+    },
+    "rules": {
+        //"quotes": "off",    // 
+        "quotes": [2, "double"],    // To enforce double quotes and not single quotes
+
+        "semi": 0,  // to ignore semi columns at the end of the lines
+        "no-multiple-empty-lines" : 0,  // allow multiple empty lines
+        // "indent": ["error", 4],
+        "indent": 0,    // to ignore indentation problems
+        "no-multi-spaces": ["warn", { "ignoreEOLComments": true }],  // Warning in case there are multi spaces in the code
+        "spaced-comment" : 0 // disable checking spaces in comments
+
+    }
+}
+
