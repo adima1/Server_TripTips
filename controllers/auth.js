@@ -14,10 +14,16 @@ export const register = async (req, res) => {
       lastName,
       email,
       password,
-      friends,
+      phoneNumber,  // שדה נוסף כאן
+      friends = [], // אם החברים לא נשלחים, אתן ערך ברירת מחדל ריק
       location,
       occupation,
     } = req.body;
+
+    // בדוק אם כל השדות הנדרשים נמסרים
+    if (!firstName || !lastName || !email || !password || !phoneNumber) {
+      return res.status(400).json({ error: "Missing required fields." });
+    }
 
     // יצירת מלח לצורך הצפנת הסיסמה
     const salt = await bcrypt.genSalt();
@@ -30,6 +36,7 @@ export const register = async (req, res) => {
       lastName,
       email,
       password: passwordHash, // שמירת הסיסמה המוצפנת
+      phoneNumber,  // שדה נוסף כאן
       friends,
       location,
       occupation,
@@ -53,6 +60,11 @@ export const login = async (req, res) => {
     console.log("Login request received:", req.body); // לוג: פרטי הבקשה
 
     const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ msg: "Email and password are required." });
+    }
+
     console.log("Finding user with email:", email);
     const user = await User.findOne({ email: email });
 
@@ -82,6 +94,7 @@ export const login = async (req, res) => {
       occupation: user.occupation,
       viewedProfile: user.viewedProfile,
       impressions: user.impressions,
+      phoneNumber: user.phoneNumber,  // הוספת שדה זה גם בתשובה
     };
 
     console.log("User logged in:", userResponse); // לוג: משתמש התחבר בהצלחה

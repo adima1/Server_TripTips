@@ -25,10 +25,16 @@ const UserSchema = new mongoose.Schema(
       required: true,
       min: 5,
     },
-    /*picturePath: {
+    phoneNumber: {
+      type: String,
+      required: true,
+
+      match: /^05\d{8}$/, // תבנית לאימות מספר טלפון בדיוק 10 ספרות
+    },
+    picturePath: {
       type: String,
       default: "",
-    },*/
+    },
     friends: {
       type: Array,
       default: [],

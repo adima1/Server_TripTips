@@ -20,8 +20,8 @@ export const getUserFriends = async (req, res) => {
       user.friends.map((id) => User.findById(id)) // חיפוש כל החברים של המשתמש לפי מזהים
     );
     const formattedFriends = friends.map(
-      ({ _id, firstName, lastName, occupation, location/*, picturePath */}) => {
-        return { _id, firstName, lastName, occupation, location/*, picturePath */}; // עיצוב האובייקטים של החברים לפורמט מסוים
+      ({ _id, firstName, lastName, occupation, location, picturePath }) => {
+        return { _id, firstName, lastName, occupation, location, picturePath }; // עיצוב האובייקטים של החברים לפורמט מסוים
       }
     );
     res.status(200).json(formattedFriends); // שליחת רשימת החברים המפורמטת כתגובה במצב 200 (הצלחה)
@@ -51,13 +51,48 @@ export const addRemoveFriend = async (req, res) => {
       user.friends.map((id) => User.findById(id)) // חיפוש כל החברים החדשים של המשתמש לפי מזהים
     );
     const formattedFriends = friends.map(
-      ({ _id, firstName, lastName, occupation, location/*, picturePath*/ }) => {
-        return { _id, firstName, lastName, occupation, location/*, picturePath */}; // עיצוב האובייקטים של החברים לפורמט מסוים
+      ({ _id, firstName, lastName, occupation, location, picturePath }) => {
+        return { _id, firstName, lastName, occupation, location, picturePath }; // עיצוב האובייקטים של החברים לפורמט מסוים
       }
     );
 
     res.status(200).json(formattedFriends); // שליחת רשימת החברים החדשה המפורמטת כתגובה במצב 200 (הצלחה)
   } catch (err) {
     res.status(404).json({ message: err.message }); // שליחת הודעת שגיאה במצב 404 אם ישנה בעיה
+  }
+};
+
+export const updateUser = async (req, res) => {
+
+  try {
+
+    console.log("Received update request for user ID:", req.params.id);
+    console.log("Update data:", req.body);
+    const { id } = req.params;
+    const { firstName, lastName, email, location, occupation } = req.body;
+ 
+
+    const updateFields = {};
+    if (firstName) updateFields.firstName = firstName;
+    if (lastName) updateFields.lastName = lastName;
+    if (email) updateFields.email = email;
+    if (location) updateFields.location = location;
+    if (occupation) updateFields.occupation = occupation;
+    console.log("Fields to update:", updateFields);
+
+    const updatedUser = await User.findByIdAndUpdate(
+      id,
+      { $set: updateFields },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "משתמש לא נמצא" });
+    }
+    console.log("User updated successfully:", updatedUser);
+    res.status(200).json(updatedUser);
+  } catch (err) {
+    console.error("Error updating user:", err);
+    res.status(500).json({ message: err.message, stack: err.stack });
   }
 };

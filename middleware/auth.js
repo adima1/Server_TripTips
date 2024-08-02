@@ -1,22 +1,22 @@
 import jwt from "jsonwebtoken";
-
-// Middleware לאימות טוקן
 export const verifyToken = async (req, res, next) => {
   try {
-    let token = req.header("Authorization"); // משיכת הטוקן מההדרים של הבקשה
-
+    let token = req.header("Authorization");
+    console.log("Received token:", token);
     if (!token) {
-      return res.status(403).send("Access Denied"); // אם אין טוקן, מחזיר שגיאת גישה נדחית
+      return res.status(403).send("Access Denied");
     }
-
     if (token.startsWith("Bearer ")) {
-      token = token.slice(7, token.length).trimLeft(); // ניקוי הטוקן מהתחילית "Bearer "
+      token = token.slice(7, token.length).trimLeft();
     }
-
-    const verified = jwt.verify(token, process.env.JWT_SECRET); // אימות הטוקן באמצעות מפתח הסודי של JWT
-    req.user = verified; // שמירת נתוני המשתמש שנמצאו בטוקן בתוך הבקשה
-    next(); // מעבר לפונקציה הבאה (פונקציית המדיולר)
+    console.log("Cleaned token:", token);
+    const verified = jwt.verify(token, process.env.JWT_SECRET);
+    console.log("Verified token:", verified);
+    req.user = verified;
+    next();
   } catch (err) {
-    res.status(500).json({ error: err.message }); // במקרה של שגיאה, מחזיר תגובת JSON עם הודעת שגיאה
+    console.error("Token verification error:", err);
+    res.status(401).json({ error: "Invalid token", details: err.message });
   }
+
 };
