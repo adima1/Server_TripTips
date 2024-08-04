@@ -6,7 +6,7 @@ import dotenv from 'dotenv'; // יבוא של dotenv לטעינת משתני ס�
 dotenv.config(); // טוען את משתני הסביבה מקובץ .env
 
 /* REGISTER USER */
-export const register = async (req, res) => {
+export const register = async (req, res) => { // פונקציה לרישום משתמש חדש
   try {
     // קריאה לפרמטרים מהבקשה שנשלחו בגוף הבקשה
     const {
@@ -22,13 +22,13 @@ export const register = async (req, res) => {
 
     // בדוק אם כל השדות הנדרשים נמסרים
     if (!firstName || !lastName || !email || !password || !phoneNumber) {
-      return res.status(400).json({ error: "Missing required fields." });
+      return res.status(400).json({ error: "Missing required fields." }); // שליחת שגיאה אם חסר שדה נדרש
     }
 
     // יצירת מלח לצורך הצפנת הסיסמה
-    const salt = await bcrypt.genSalt();
+    const salt = await bcrypt.genSalt(); // יצירת מלח אקראי
     // הצפנת הסיסמה באמצעות המלח שנוצר
-    const passwordHash = await bcrypt.hash(password, salt);
+    const passwordHash = await bcrypt.hash(password, salt); // הצפנת הסיסמה עם המלח
 
     // יצירת אובייקט משתמש חדש במסד הנתונים
     const newUser = new User({
@@ -45,46 +45,57 @@ export const register = async (req, res) => {
     });
 
     // שמירת המשתמש החדש במסד הנתונים
-    const savedUser = await newUser.save();
+    const savedUser = await newUser.save(); // שמירה במסד הנתונים
     // שליחת תשובה בקוד סטטוס 201 עם המשתמש שנוצר
-    res.status(201).json(savedUser);
+    res.status(201).json(savedUser); // שליחה של המשתמש שנוצר
   } catch (err) {
     console.error("Error in register:", err.message); // הדפסת הודעת שגיאה לקונסול
-    res.status(500).json({ error: err.message }); // שליחת תשובת שגיאה
+    res.status(500).json({ error: err.message }); // שליחת תשובת שגיאה עם הודעת השגיאה
   }
 };
 
 /* LOGGING IN */
-export const login = async (req, res) => {
+export const login = async (req, res) => { // פונקציה להתחברות משתמש
   try {
     console.log("Login request received:", req.body); // לוג: פרטי הבקשה
 
-    const { email, password } = req.body;
+    const { login, password } = req.body; // קריאה לדוא"ל וסיסמה מהבקשה
 
-    if (!email || !password) {
-      return res.status(400).json({ msg: "Email and password are required." });
+    if (!login || !password) { // בדוק אם כל השדות הנדרשים נמסרים
+      return res.status(400).json({ msg: "Email or phone number and password are required." }); // שליחת שגיאה אם חסר דוא"ל או סיסמה
     }
 
-    console.log("Finding user with email:", email);
-    const user = await User.findOne({ email: email });
+    console.log("Determining if email or phone number");
+    let user;
+    
+    // בדוק אם הקלט הוא אימייל או מספר טלפון וחשב את המשתמש המתאים
+    if (login.includes('@')) {
+      // אם הקלט מכיל '@', נניח שזה אימייל
+      console.log("Finding user with email:", login); // לוג: חיפוש משתמש לפי דוא"ל
+      user = await User.findOne({ email: login }); // חיפוש משתמש לפי דוא"ל
+    } else {
+      // אחרת, נניח שזה מספר טלפון
+      console.log("Finding user with phone number:", login); // לוג: חיפוש משתמש לפי מספר טלפון
+      user = await User.findOne({ phoneNumber: login }); // חיפוש משתמש לפי מספר טלפון
+    }
 
-    if (!user) {
+    if (!user) { // אם לא נמצא משתמש
       console.error("User does not exist"); // לוג: משתמש לא קיים
-      return res.status(400).json({ msg: "User does not exist." });
+      return res.status(400).json({ msg: "User does not exist." }); // שליחת שגיאה אם המשתמש לא קיים
     }
 
-    console.log("Comparing passwords");
-    const isMatch = await bcrypt.compare(password, user.password);
+    console.log("Comparing passwords"); // לוג: השוואת סיסמאות
+    const isMatch = await bcrypt.compare(password, user.password); // השוואת הסיסמה שניתנה לסיסמה המוצפנת
 
-    if (!isMatch) {
+    if (!isMatch) { // אם הסיסמאות לא תואמות
       console.error("Invalid credentials"); // לוג: נתוני התחברות שגויים
-      return res.status(400).json({ msg: "Invalid credentials." });
+      return res.status(400).json({ msg: "Invalid credentials." }); // שליחת שגיאה אם הנתונים שגויים
     }
 
-    console.log("Creating JWT token");
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' }); // הוספת אפשרות לפקיעת תוקף
+    console.log("Creating JWT token"); // לוג: יצירת טוקן JWT
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' }); // יצירת טוקן עם תוקף של שעה
 
-    const userResponse = {
+    const userResponse = { // אובייקט התשובה עם פרטי המשתמש
       id: user._id,
       firstName: user.firstName,
       lastName: user.lastName,
@@ -99,9 +110,9 @@ export const login = async (req, res) => {
 
     console.log("User logged in:", userResponse); // לוג: משתמש התחבר בהצלחה
 
-    res.status(200).json({ token, user: userResponse });
+    res.status(200).json({ token, user: userResponse }); // שליחת תשובת הצלחה עם הטוקן ופרטי המשתמש
   } catch (err) {
     console.error("Error in login:", err.message); // לוג: הודעת שגיאה
-    res.status(500).json({ error: err.message }); // שליחת תשובת שגיאה
+    res.status(500).json({ error: err.message }); // שליחת תשובת שגיאה עם הודעת השגיאה
   }
 };
