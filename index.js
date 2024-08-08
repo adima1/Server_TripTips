@@ -98,7 +98,7 @@ app.get("/about", (req, res) => {
 });
 
 app.get("/ping", (req, res) => {
-  res.send("pong <TripTips6>");
+  res.send("pong TripTips6");
 });
 
 export default app;
