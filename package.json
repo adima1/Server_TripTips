@@ -19,7 +19,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "mocha tests/**/*.spec.mjs",
+    "test": "mocha tests/test.spec.js",
     "start": "node index.js"
   },
   "keywords": [],
