@@ -18,5 +18,8 @@ describe("API routes", () => {
 });
 
 after((done) => {
-  server.close(done); // סגור את השרת לאחר הבדיקות
+  server.close(() => {
+    console.log('Server closed'); // להדפיס הודעה שהשרת נסגר
+    done(); // סיים את הבדיקה
+  });
 });
