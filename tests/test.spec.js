@@ -1,7 +1,6 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import { expect } from 'chai';
-
 // טוען את משתני הסביבה מקובץ .env
 dotenv.config();
 
