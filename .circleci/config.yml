@@ -15,10 +15,25 @@ jobs:
       - run:
           name: Run tests
           command: npm run test
-          timeout: 5m # הגדרת זמן מקסימלי של 10 דקות
 
 workflows:
-  version: 2
+  version: 2version: 2.1
+jobs:
+  test:
+    docker:
+      - image: circleci/node:14
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: npm install
+      - run:
+          name: Run tests
+          command: npm test
+      - run:
+          name: Kill any remaining processes
+          command: kill $(lsof -t -i:3001) || true
+
   my-workflow:
     jobs:
       - build-test-link
