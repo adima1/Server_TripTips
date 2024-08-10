@@ -19,6 +19,7 @@ export const createPost = async (req, res) => {
       location,
       likes: {}, // לייקים ריקים בהתחלה
       saved: {},
+      shared: {},
       comments: [], // תגובות ריקות בהתחלה
     });
     await newPost.save(); // שמירת הפוסט החדש בבסיס הנתונים
@@ -65,7 +66,8 @@ export const getLikedPosts = async (req, res) => {
   }
 };
 
-  // מציאת כל הפוסטים שהמשתמש עשה להם לייק
+
+  // מציאת כל הפוסטים שהמשתמש שמר  
   export const getSavedPosts = async (req, res) => {
     try {
       const { userId } = req.params; // קבלת מזהה המשתמש מהפרמטרים של הבקשה
@@ -75,6 +77,17 @@ export const getLikedPosts = async (req, res) => {
       res.status(404).json({ message: err.message }); // החזרת שגיאה עם סטטוס 404 (לא נמצא)
     }
   };
+
+    // מציאת כל הפוסטים שהמשתמש שמר  
+    export const getSharedPosts = async (req, res) => {
+      try {
+        const { userId } = req.params; // קבלת מזהה המשתמש מהפרמטרים של הבקשה
+        const posts = await Post.find({ [`shared.${userId}`]: true });
+        res.status(200).json(posts); // החזרת כל הפוסטים עם סטטוס 200 (הצלחה)
+      } catch (err) {
+        res.status(404).json({ message: err.message }); // החזרת שגיאה עם סטטוס 404 (לא נמצא)
+      }
+    };
 
 
 /* UPDATE */
@@ -134,3 +147,95 @@ export const savePost = async (req, res) => {
     res.status(404).json({ message: err.message }); // החזרת שגיאה עם סטטוס 500 (שגיאת שרת)
   }
 };
+
+
+/* UPDATE */
+// פונקציה להוספת/הסרת שיתוף מפוסט
+export const sharePost = async (req, res) => {
+  try {
+    const { id } = req.params; // קבלת מזהה הפוסט מהפרמטרים של הבקשה
+    const { userId } = req.body; // קבלת מזהה המשתמש מהגוף של הבקשה
+    const post = await Post.findById(id); // מציאת הפוסט לפי מזהה
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+    const isShared = post.shared.get(userId); // בדיקה אם המשתמש כבר עשה לייק לפוסט
+    if (isShared) {
+      post.shared.delete(userId); // אם כבר עשה לייק, מסירים את הלייק
+    } else {
+      post.shared.set(userId, true); // אם לא עשה לייק, מוסיפים את הלייק
+    }
+    const updatedPost = await Post.findByIdAndUpdate(
+      id,
+      { shared: post.shared }, // עדכון הלייקים בפוסט
+      { new: true } // מחזירים את הפוסט המעודכן
+    );
+    console.log("Post updated:", updatedPost);
+    res.status(200).json(updatedPost); // החזרת הפוסט המעודכן עם סטטוס 200 (הצלחה)
+  } catch (err) {
+    console.error("Error sharing post:", err);
+    res.status(404).json({ message: err.message }); // החזרת שגיאה עם סטטוס 500 (שגיאת שרת)
+  }
+};
+
+/* UPDATE */
+// פונקציה למחיקת פוסט
+export const deletePost = async (req, res) => {
+  try {
+    const { id } = req.params; // קבלת מזהה הפוסט מהפרמטרים של הבקשה
+
+    // מציאת הפוסט לפי מזהה
+    const post = await Post.findById(id); 
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    // מחיקת הפוסט מהמאגר הכללי
+    await Post.findByIdAndDelete(id);
+
+    res.status(200).json({ message: "Post deleted successfully" }); // החזרת הצלחה עם סטטוס 200
+  } catch (err) {
+    console.error("Error deleting post:", err);
+    res.status(500).json({ message: err.message }); // החזרת שגיאה עם סטטוס 500 (שגיאת שרת)
+  }
+};
+
+
+/* UPDATE */
+// פונקציה לעדכון פרטי פוסט
+export const updatePost = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, description, location } = req.body;
+ 
+    if (!title && !description && !location) {
+      return res.status(400).json({ message: "No fields to update" });
+    }
+
+    const post = await Post.findById(id);
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    if (title) post.title = title;
+    if (description) post.description = description;
+    if (location) post.location = location;
+
+    const updatedPost = await Post.findByIdAndUpdate(
+      id,
+      {
+        title: post.title,
+        description: post.description,
+        location: post.location
+      },
+      { new: true }
+    );
+    
+    res.status(200).json(updatedPost);
+  } catch (err) {
+    console.error("Error updating post:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+

@@ -6,7 +6,8 @@ import dotenv from 'dotenv'; // יבוא של dotenv לטעינת משתני ס�
 dotenv.config(); // טוען את משתני הסביבה מקובץ .env
 
 /* REGISTER USER */
-export const register = async (req, res) => { // פונקציה לרישום משתמש חדש
+
+export const register = async (req, res) => {
   try {
     // קריאה לפרמטרים מהבקשה שנשלחו בגוף הבקשה
     const {
@@ -14,45 +15,47 @@ export const register = async (req, res) => { // פונקציה לרישום מ�
       lastName,
       email,
       password,
-      phoneNumber,  // שדה נוסף כאן
-      friends = [], // אם החברים לא נשלחים, אתן ערך ברירת מחדל ריק
-      location,
-      occupation,
+      phoneNumber,
+      location = "", // הוספת ערך ברירת מחדל
+      occupation = "", // הוספת ערך ברירת מחדל
     } = req.body;
+
+    // קריאה לפרמטרים מהבקשה שנשלחו עם הקובץ
+    const picturePath = req.file ? req.file.filename : "anonymous.jpg"; // ערך ברירת מחדל אם אין קובץ
 
     // בדוק אם כל השדות הנדרשים נמסרים
     if (!firstName || !lastName || !email || !password || !phoneNumber) {
-      return res.status(400).json({ error: "Missing required fields." }); // שליחת שגיאה אם חסר שדה נדרש
+      return res.status(400).json({ error: "Missing required fields." });
     }
 
     // יצירת מלח לצורך הצפנת הסיסמה
-    const salt = await bcrypt.genSalt(); // יצירת מלח אקראי
-    // הצפנת הסיסמה באמצעות המלח שנוצר
-    const passwordHash = await bcrypt.hash(password, salt); // הצפנת הסיסמה עם המלח
+    const salt = await bcrypt.genSalt();
+    const passwordHash = await bcrypt.hash(password, salt);
 
     // יצירת אובייקט משתמש חדש במסד הנתונים
     const newUser = new User({
       firstName,
       lastName,
       email,
-      password: passwordHash, // שמירת הסיסמה המוצפנת
-      phoneNumber,  // שדה נוסף כאן
-      friends,
+      password: passwordHash,
+      phoneNumber,
+      picturePath,
       location,
       occupation,
-      viewedProfile: Math.floor(Math.random() * 10000), // יצירת מספר אקראי לפרופיל צפוי
-      impressions: Math.floor(Math.random() * 10000), // יצירת מספר אקראי לרושם
+      viewedProfile: Math.floor(Math.random() * 10000),
+      impressions: Math.floor(Math.random() * 10000),
     });
 
     // שמירת המשתמש החדש במסד הנתונים
-    const savedUser = await newUser.save(); // שמירה במסד הנתונים
-    // שליחת תשובה בקוד סטטוס 201 עם המשתמש שנוצר
-    res.status(201).json(savedUser); // שליחה של המשתמש שנוצר
+    const savedUser = await newUser.save();
+    res.status(201).json(savedUser);
   } catch (err) {
-    console.error("Error in register:", err.message); // הדפסת הודעת שגיאה לקונסול
-    res.status(500).json({ error: err.message }); // שליחת תשובת שגיאה עם הודעת השגיאה
+    console.error("Error in register:", err.message);
+    res.status(500).json({ error: err.message });
   }
 };
+
+
 
 /* LOGGING IN */
 export const login = async (req, res) => { // פונקציה להתחברות משתמש
@@ -106,6 +109,7 @@ export const login = async (req, res) => { // פונקציה להתחברות מ
       viewedProfile: user.viewedProfile,
       impressions: user.impressions,
       phoneNumber: user.phoneNumber,  // הוספת שדה זה גם בתשובה
+      picturePath: user.picturePath, 
     };
 
     console.log("User logged in:", userResponse); // לוג: משתמש התחבר בהצלחה

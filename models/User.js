@@ -33,7 +33,7 @@ const UserSchema = new mongoose.Schema(
     },
     picturePath: {
       type: String,
-      default: "nofar.jpg",
+      default: "anonymous.jpg",
     },
     friends: {
       type: Array,

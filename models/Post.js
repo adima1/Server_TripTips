@@ -19,7 +19,7 @@ const postSchema = mongoose.Schema(
     location: String, // שדה אופציונלי - סוגו מחרוזת (String)
     description: String, // שדה אופציונלי - סוגו מחרוזת (String)
     picturePath: String, // שדה אופציונלי - סוגו מחרוזת (String), משמש לשמירת הנתיב לתמונה
-    //userPicturePath: String, // שדה אופציונלי - סוגו מחרוזת (String), משמש לשמירת הנתיב לתמונת המשתמש
+    userPicturePath: String, // שדה אופציונלי - סוגו מחרוזת (String), משמש לשמירת הנתיב לתמונת המשתמש
     
     likes: {
       type: Map, // סוג השדה הוא מפה (Map) של מפתחות וערכים
@@ -27,6 +27,11 @@ const postSchema = mongoose.Schema(
     },
 
     saved: {
+      type: Map, // סוג השדה הוא מפה (Map) של מפתחות וערכים
+      of: Boolean, // כל ערך במפה הוא מסוג Boolean (נכון/לא נכון)
+    },
+
+    shared: {
       type: Map, // סוג השדה הוא מפה (Map) של מפתחות וערכים
       of: Boolean, // כל ערך במפה הוא מסוג Boolean (נכון/לא נכון)
     },
