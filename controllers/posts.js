@@ -33,10 +33,23 @@ export const createPost = async (req, res) => {
     res.status(409).json({ message: err.message });
   }
 };
-
-
-
  
+/* READ */
+// פונקציה לקבלת כל הפוסטים לפי region
+export const getPostsByRegion = async (req, res) => {
+  try {
+    const { region } = req.query; // קבלת האזור מתוך פרמטרי ה-query של הבקשה
+    if (!region) {
+      return res.status(400).json({ message: "Region is required" }); // החזרת שגיאה אם לא נבחר אזור
+    }
+
+    const posts = await Post.find({ region }); // מציאת כל הפוסטים שמתאימים לאזור
+    res.status(200).json(posts); // החזרת כל הפוסטים עם סטטוס 200 (הצלחה)
+  } catch (err) {
+    res.status(404).json({ message: err.message }); // החזרת שגיאה עם סטטוס 404 (לא נמצא)
+  }
+};
+
 /* READ */
 // פונקציה לקבלת כל הפוסטים בפיד
 export const getFeedPosts = async (req, res) => {

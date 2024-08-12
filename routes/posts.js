@@ -1,5 +1,5 @@
 import express from "express"; // ייבוא של ספריית express
-import { getFeedPosts, getUserPosts, likePost, savePost, sharePost, deletePost } from "../controllers/posts.js"; // ייבוא הפונקציות מהקונטרולרים של הפוסטים
+import { getPostsByRegion, getFeedPosts, getUserPosts, likePost, savePost, sharePost, deletePost } from "../controllers/posts.js"; // ייבוא הפונקציות מהקונטרולרים של הפוסטים
 import { getLikedPosts, getSavedPosts, getSharedPosts, updatePost} from "../controllers/posts.js";
 import { verifyToken } from "../middleware/auth.js"; // ייבוא פונקציית אמצע (middleware) לאימות אסימוני
 
@@ -8,6 +8,9 @@ const router = express.Router(); // יצירת ראוטר חדש של express
 /* READ */
 // מסלול שמחזיר את כל הפוסטים בפיד
 router.get("/", verifyToken, getFeedPosts); 
+
+//הבאת תמונות לפי אזור
+router.get("/region", verifyToken, getPostsByRegion); // מסלול חדש לקבלת פוסטים לפי אזור
 
 // מסלול שמחזיר את כל הפוסטים של משתמש ספציפי לפי userId
 router.get("/:userId/posts", verifyToken, getUserPosts); 
