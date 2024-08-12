@@ -5,9 +5,11 @@ import User from "../models/User.js"; // ייבוא המודל של המשתמש
 // פונקציה ליצירת פוסט חדש
 export const createPost = async (req, res) => {
   try {
-    console.log("Received data:", req.body);
-    const { userId, description, picturePath, title, location } = req.body; // קבלת הפרטים מהבקשה
-    const user = await User.findById(userId); // מציאת המשתמש לפי מזהה
+    const { userId, description, picturePath, title, location, region} = req.body;
+    const user = await User.findById(userId);
+
+    console.log("Region received:", region); // הדפסת הערך של region
+
     const newPost = new Post({
       userId,
       firstName: user.firstName,
@@ -17,19 +19,22 @@ export const createPost = async (req, res) => {
       picturePath,
       title,
       location,
-      likes: {}, // לייקים ריקים בהתחלה
+      region, // שמירת האזור בבסיס הנתונים
+      likes: {},
       saved: {},
       shared: {},
-      comments: [], // תגובות ריקות בהתחלה
+      comments: [],
     });
-    await newPost.save(); // שמירת הפוסט החדש בבסיס הנתונים
-    const post = await Post.find(); // מציאת כל הפוסטים
-    res.status(201).json(post); // החזרת כל הפוסטים עם סטטוס 201 (נוצר)
+
+    await newPost.save();
+    const post = await Post.find();
+    res.status(201).json(post);
   } catch (err) {
-    console.error("Error creating post:", err);
-    res.status(409).json({ message: err.message }); // החזרת שגיאה עם סטטוס 409 (ניגוד)
+    res.status(409).json({ message: err.message });
   }
 };
+
+
 
  
 /* READ */
