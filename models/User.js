@@ -35,10 +35,18 @@ const UserSchema = new mongoose.Schema(
       type: String,
       default: "anonymous.jpg",
     },
-    friends: {
+    following: {
       type: Array,
       default: [],
     },
+    followers: {
+      type: Array,
+      default: [],
+    },
+    // friends: {
+    //   type: Array,
+    //   default: [],
+    // },
     location: String,
     occupation: String,
     viewedProfile: Number,

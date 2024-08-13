@@ -11,56 +11,57 @@ export const getUser = async (req, res) => {
   }
 };
 
-export const getUserFriends = async (req, res) => {
+export const getUserFollowing = async (req, res) => {
   try {
     const { id } = req.params; // הוצאת מזהה המשתמש מהפרמטרים של הבקשה
     const user = await User.findById(id); // חיפוש המשתמש לפי מזהה
 
-    const friends = await Promise.all(
-      user.friends.map((id) => User.findById(id)) // חיפוש כל החברים של המשתמש לפי מזהים
+    const following = await Promise.all(
+      user.following.map((id) => User.findById(id)) // חיפוש כל החברים של המשתמש לפי מזהים
     );
-    const formattedFriends = friends.map(
+    const formattedFollowing = following.map(
       ({ _id, firstName, lastName, occupation, location, picturePath }) => {
         return { _id, firstName, lastName, occupation, location, picturePath }; // עיצוב האובייקטים של החברים לפורמט מסוים
       }
     );
-    res.status(200).json(formattedFriends); // שליחת רשימת החברים המפורמטת כתגובה במצב 200 (הצלחה)
+    res.status(200).json(formattedFollowing); // שליחת רשימת החברים המפורמטת כתגובה במצב 200 (הצלחה)
   } catch (err) {
     res.status(404).json({ message: err.message }); // שליחת הודעת שגיאה במצב 404 אם ישנה בעיה
   }
 };
 
 /* UPDATE */
-export const addRemoveFriend = async (req, res) => {
+export const addRemoveFollowing = async (req, res) => {
   try {
-    const { id, friendId } = req.params; // הוצאת מזהי המשתמש והחבר מהפרמטרים של הבקשה
+    const { id, followingId } = req.params; // הוצאת מזהי המשתמש והחבר מהפרמטרים של הבקשה
     const user = await User.findById(id); // חיפוש המשתמש לפי מזהה
-    const friend = await User.findById(friendId); // חיפוש החבר לפי מזהה
+    const follow = await User.findById(followingId); // חיפוש החבר לפי מזהה
 
-    if (user.friends.includes(friendId)) {
-      user.friends = user.friends.filter((id) => id !== friendId); // הסרת החבר מרשימת החברים אם הוא כבר קיים בה
-      friend.friends = friend.friends.filter((id) => id !== id); // הסרת המשתמש מרשימת החברים של החבר
+    if (user.following.includes(followingId)) {
+      user.following = user.following.filter((id) => id !== followingId); // הסרת החבר מרשימת החברים אם הוא כבר קיים בה
+ //     follow.following = follow.following.filter((id) => id !== id); // הסרת המשתמש מרשימת החברים של החבר
     } else {
-      user.friends.push(friendId); // הוספת החבר לרשימת החברים אם הוא לא קיים בה
-      friend.friends.push(id); // הוספת המשתמש לרשימת החברים של החבר
+      user.following.push(followingId); // הוספת החבר לרשימת החברים אם הוא לא קיים בה
+ //     follow.following.push(id); // הוספת המשתמש לרשימת החברים של החבר
     }
     await user.save(); // שמירת השינויים במשתמש
-    await friend.save(); // שמירת השינויים בחבר
+    await follow.save(); // שמירת השינויים בחבר
 
-    const friends = await Promise.all(
-      user.friends.map((id) => User.findById(id)) // חיפוש כל החברים החדשים של המשתמש לפי מזהים
+    const following = await Promise.all(
+      user.following.map((id) => User.findById(id)) // חיפוש כל החברים החדשים של המשתמש לפי מזהים
     );
-    const formattedFriends = friends.map(
+    const formattedFollowing = following.map(
       ({ _id, firstName, lastName, occupation, location, picturePath }) => {
         return { _id, firstName, lastName, occupation, location, picturePath }; // עיצוב האובייקטים של החברים לפורמט מסוים
       }
     );
 
-    res.status(200).json(formattedFriends); // שליחת רשימת החברים החדשה המפורמטת כתגובה במצב 200 (הצלחה)
+    res.status(200).json(formattedFollowing); // שליחת רשימת החברים החדשה המפורמטת כתגובה במצב 200 (הצלחה)
   } catch (err) {
     res.status(404).json({ message: err.message }); // שליחת הודעת שגיאה במצב 404 אם ישנה בעיה
   }
 };
+
 
 export const updateUser = async (req, res) => {
 
