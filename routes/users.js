@@ -3,9 +3,10 @@ import {
     getUser,
     // getUserFriends,
     // addRemoveFriend,
-    updateUser,
-    addRemoveFollowing,
     getUserFollowing,
+    getUserFollowers,
+    addRemoveFollowing,
+    removeFollower,
 }from "../controllers/users.js";
 import { verifyToken } from "../middleware/auth.js";
 
