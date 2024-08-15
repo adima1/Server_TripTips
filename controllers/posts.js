@@ -35,11 +35,38 @@ export const createPost = async (req, res) => {
 };
 
 /* READ */
+// פונקציה לקבלת כל הפוסטים בפיד עם אפשרות לחיפוש לפי מונח חיפוש (searchTerm)
+export const getAllPosts = async (req, res) => {
+  try {
+    const { searchTerm } = req.query; // קבלת מונח החיפוש מתוך פרמטרי ה-query של הבקשה
+
+    let query = {};
+
+    if (searchTerm) {
+      query = {
+        $or: [
+          { title: { $regex: searchTerm, $options: "i" } }, // חיפוש בכותרת
+          { description: { $regex: searchTerm, $options: "i" } }, // חיפוש בתיאור
+          { firstName: { $regex: searchTerm, $options: "i" } }, // חיפוש בשם פרטי
+          { lastName: { $regex: searchTerm, $options: "i" } }, // חיפוש בשם משפחה
+          { location: { $regex: searchTerm, $options: "i" } }, // חיפוש במיקום
+        ],
+      };
+    }
+
+    const posts = await Post.find(query); // מציאת כל הפוסטים שמתאימים למונח החיפוש (אם קיים)
+    res.status(200).json(posts); // החזרת כל הפוסטים עם סטטוס 200 (הצלחה)
+  } catch (err) {
+    res.status(404).json({ message: err.message }); // החזרת שגיאה עם סטטוס 404 (לא נמצא)
+  }
+};
+
+/* READ */
 // פונקציה לקבלת כל הפוסטים לפי region ומונח חיפוש (searchTerm)
 export const getPostsByRegion = async (req, res) => {
   try {
     const { region, searchTerm } = req.query; // קבלת האזור והמונח חיפוש מתוך פרמטרי ה-query של הבקשה
-    
+
     if (!region) {
       return res.status(400).json({ message: "Region is required" }); // החזרת שגיאה אם לא נבחר אזור
     }
@@ -53,8 +80,9 @@ export const getPostsByRegion = async (req, res) => {
           { title: { $regex: searchTerm, $options: "i" } }, // חיפוש בכותרת
           { description: { $regex: searchTerm, $options: "i" } }, // חיפוש בתיאור
           { firstName: { $regex: searchTerm, $options: "i" } }, // חיפוש בשם פרטי
-          { lastName: { $regex: searchTerm, $options: "i" } } // חיפוש בשם משפחה
-        ]
+          { lastName: { $regex: searchTerm, $options: "i" } }, // חיפוש בשם משפחה
+          { location: { $regex: searchTerm, $options: "i" } }, // חיפוש במיקום
+        ],
       };
     }
 
@@ -79,8 +107,9 @@ export const getFeedPosts = async (req, res) => {
           { title: { $regex: searchTerm, $options: "i" } }, // חיפוש בכותרת
           { description: { $regex: searchTerm, $options: "i" } }, // חיפוש בתיאור
           { firstName: { $regex: searchTerm, $options: "i" } }, // חיפוש בשם פרטי
-          { lastName: { $regex: searchTerm, $options: "i" } } // חיפוש בשם משפחה
-        ]
+          { lastName: { $regex: searchTerm, $options: "i" } },
+          { location: { $regex: searchTerm, $options: "i" } },
+        ],
       };
     }
 
@@ -107,8 +136,9 @@ export const getUserPosts = async (req, res) => {
           { title: { $regex: searchTerm, $options: "i" } }, // חיפוש בכותרת
           { description: { $regex: searchTerm, $options: "i" } }, // חיפוש בתיאור
           { firstName: { $regex: searchTerm, $options: "i" } }, // חיפוש בשם פרטי
-          { lastName: { $regex: searchTerm, $options: "i" } } // חיפוש בשם משפחה
-        ]
+          { lastName: { $regex: searchTerm, $options: "i" } }, // חיפוש בשם משפחה
+          { location: { $regex: searchTerm, $options: "i" } },
+        ],
       };
     }
 
@@ -135,8 +165,9 @@ export const getLikedPosts = async (req, res) => {
           { title: { $regex: searchTerm, $options: "i" } }, // חיפוש בכותרת
           { description: { $regex: searchTerm, $options: "i" } }, // חיפוש בתיאור
           { firstName: { $regex: searchTerm, $options: "i" } }, // חיפוש בשם פרטי
-          { lastName: { $regex: searchTerm, $options: "i" } } // חיפוש בשם משפחה
-        ]
+          { lastName: { $regex: searchTerm, $options: "i" } }, // חיפוש בשם משפחה
+          { location: { $regex: searchTerm, $options: "i" } },
+        ],
       };
     }
 
@@ -163,8 +194,9 @@ export const getSavedPosts = async (req, res) => {
           { title: { $regex: searchTerm, $options: "i" } }, // חיפוש בכותרת
           { description: { $regex: searchTerm, $options: "i" } }, // חיפוש בתיאור
           { firstName: { $regex: searchTerm, $options: "i" } }, // חיפוש בשם פרטי
-          { lastName: { $regex: searchTerm, $options: "i" } } // חיפוש בשם משפחה
-        ]
+          { lastName: { $regex: searchTerm, $options: "i" } },
+          { location: { $regex: searchTerm, $options: "i" } },
+        ],
       };
     }
 
@@ -191,8 +223,9 @@ export const getSharedPosts = async (req, res) => {
           { title: { $regex: searchTerm, $options: "i" } }, // חיפוש בכותרת
           { description: { $regex: searchTerm, $options: "i" } }, // חיפוש בתיאור
           { firstName: { $regex: searchTerm, $options: "i" } }, // חיפוש בשם פרטי
-          { lastName: { $regex: searchTerm, $options: "i" } } // חיפוש בשם משפחה
-        ]
+          { lastName: { $regex: searchTerm, $options: "i" } }, // חיפוש בשם משפחה
+          { location: { $regex: searchTerm, $options: "i" } },
+        ],
       };
     }
 
@@ -297,7 +330,7 @@ export const deletePost = async (req, res) => {
     const { id } = req.params; // קבלת מזהה הפוסט מהפרמטרים של הבקשה
 
     // מציאת הפוסט לפי מזהה
-    const post = await Post.findById(id); 
+    const post = await Post.findById(id);
     if (!post) {
       return res.status(404).json({ message: "Post not found" });
     }
@@ -318,7 +351,7 @@ export const updatePost = async (req, res) => {
   try {
     const { id } = req.params;
     const { title, description, location } = req.body;
- 
+
     if (!title && !description && !location) {
       return res.status(400).json({ message: "No fields to update" });
     }
@@ -337,11 +370,11 @@ export const updatePost = async (req, res) => {
       {
         title: post.title,
         description: post.description,
-        location: post.location
+        location: post.location,
       },
       { new: true }
     );
-    
+
     res.status(200).json(updatedPost);
   } catch (err) {
     console.error("Error updating post:", err);
