@@ -35,7 +35,7 @@ const UserSchema = new mongoose.Schema(
       type: String,
       default: "anonymous.jpg",
     },
-    friends: {
+    following: {
       type: Array,
       default: [],
     },
@@ -43,10 +43,17 @@ const UserSchema = new mongoose.Schema(
       type: Array,
       default: [],
     },
+<<<<<<< HEAD
     following: {
       type: Array,
       default: [],
     },
+=======
+    // friends: {
+    //   type: Array,
+    //   default: [],
+    // },
+>>>>>>> 9faf482ac37890432b5dc8c7e8f694eaa9a327c0
     location: String,
     occupation: String,
     viewedProfile: Number,
