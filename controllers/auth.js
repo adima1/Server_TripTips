@@ -107,15 +107,9 @@ export const login = async (req, res) => { // פונקציה להתחברות מ
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
-<<<<<<< HEAD
       friends: user.friends,
       followers: user.followers,
       following: user.following,
-=======
-      //friends: user.friends,
-      following: user.following,
-      followers: user.followers,
->>>>>>> 9faf482ac37890432b5dc8c7e8f694eaa9a327c0
       location: user.location,
       occupation: user.occupation,
       viewedProfile: user.viewedProfile,

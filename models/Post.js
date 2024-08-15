@@ -15,27 +15,27 @@ const postSchema = mongoose.Schema(
       type: String, // סוג השדה הוא מחרוזת (String)
       required: true, // שדה חובה
     },
-    title: String, // כותרת הפוסט
-    location: String, // מיקום הפוסט (אופציונלי)
-    description: String, // תיאור הפוסט (אופציונלי)
-    picturePath: String, // נתיב לתמונה (אופציונלי)
-    userPicturePath: String, // נתיב לתמונת המשתמש (אופציונלי)
-    region: {
-      type: String, // סוג השדה הוא מחרוזת (String)
-      required: true, // שדה חובה - חייב להיות מוגדר בעת יצירת מסמך חדש
-    },
+    title: String,
+    location: String, // שדה אופציונלי - סוגו מחרוזת (String)
+    description: String, // שדה אופציונלי - סוגו מחרוזת (String)
+    picturePath: String, // שדה אופציונלי - סוגו מחרוזת (String), משמש לשמירת הנתיב לתמונה
+    userPicturePath: String, // שדה אופציונלי - סוגו מחרוזת (String), משמש לשמירת הנתיב לתמונת המשתמש
+    
     likes: {
       type: Map, // סוג השדה הוא מפה (Map) של מפתחות וערכים
       of: Boolean, // כל ערך במפה הוא מסוג Boolean (נכון/לא נכון)
     },
+
     saved: {
       type: Map, // סוג השדה הוא מפה (Map) של מפתחות וערכים
       of: Boolean, // כל ערך במפה הוא מסוג Boolean (נכון/לא נכון)
     },
+
     shared: {
       type: Map, // סוג השדה הוא מפה (Map) של מפתחות וערכים
       of: Boolean, // כל ערך במפה הוא מסוג Boolean (נכון/לא נכון)
     },
+
     comments: {
       type: Array, // סוג השדה הוא מערך (Array)
       default: [], // ברירת מחדל היא מערך ריק

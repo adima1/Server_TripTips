@@ -5,11 +5,7 @@ import User from "../models/User.js"; // ייבוא המודל של המשתמש
 // פונקציה ליצירת פוסט חדש
 export const createPost = async (req, res) => {
   try {
-<<<<<<< HEAD
     const { userId, description, picturePath, title, location, region } = req.body;
-=======
-    const { userId, description, picturePath, title, location, region} = req.body;
->>>>>>> 9faf482ac37890432b5dc8c7e8f694eaa9a327c0
     const user = await User.findById(userId);
 
     console.log("Region received:", region); // הדפסת הערך של region
@@ -36,25 +32,6 @@ export const createPost = async (req, res) => {
     res.status(201).json(post);
   } catch (err) {
     res.status(409).json({ message: err.message });
-<<<<<<< HEAD
-=======
-  }
-};
- 
-/* READ */
-// פונקציה לקבלת כל הפוסטים לפי region
-export const getPostsByRegion = async (req, res) => {
-  try {
-    const { region } = req.query; // קבלת האזור מתוך פרמטרי ה-query של הבקשה
-    if (!region) {
-      return res.status(400).json({ message: "Region is required" }); // החזרת שגיאה אם לא נבחר אזור
-    }
-
-    const posts = await Post.find({ region }); // מציאת כל הפוסטים שמתאימים לאזור
-    res.status(200).json(posts); // החזרת כל הפוסטים עם סטטוס 200 (הצלחה)
-  } catch (err) {
-    res.status(404).json({ message: err.message }); // החזרת שגיאה עם סטטוס 404 (לא נמצא)
->>>>>>> 9faf482ac37890432b5dc8c7e8f694eaa9a327c0
   }
 };
 
@@ -387,7 +364,6 @@ export const getGuestPostsByRegion = async (req, res) => {
         ],
       };
     }
-
     const posts = await Post.find(query).select("title description location picturePath userPicturePath"); // בחירת השדות המתאימים לאורחים
     res.status(200).json(posts);
   } catch (err) {
