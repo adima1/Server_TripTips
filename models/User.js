@@ -39,13 +39,28 @@ const UserSchema = new mongoose.Schema(
       type: Array,
       default: [],
     },
+    followers: {
+      type: Array,
+      default: [],
+    },
+    following: {
+      type: Array,
+      default: [],
+    },
     location: String,
     occupation: String,
     viewedProfile: Number,
     impressions: Number,
+    
+    stars: {
+      type: Number,
+      default: 0
+    }
   },
   { timestamps: true }
 );
 
+
 const User = mongoose.model("User", UserSchema);
+
 export default User;

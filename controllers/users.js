@@ -11,88 +11,107 @@ export const getUser = async (req, res) => {
   }
 };
 
-export const getUserFriends = async (req, res) => {
+export const getUserFollowing = async (req, res) => {
   try {
     const { id } = req.params; // הוצאת מזהה המשתמש מהפרמטרים של הבקשה
     const user = await User.findById(id); // חיפוש המשתמש לפי מזהה
 
-    const friends = await Promise.all(
-      user.friends.map((id) => User.findById(id)) // חיפוש כל החברים של המשתמש לפי מזהים
+    console.log("User's following array:, user.following");
+
+    const following = await Promise.all(
+      user.following.map(async (id) => {
+        const followedUser = await User.findById(id);
+        return followedUser; // יכול להיות null אם המשתמש לא נמצא
+      })
     );
-    const formattedFriends = friends.map(
-      ({ _id, firstName, lastName, occupation, location, picturePath }) => {
-        return { _id, firstName, lastName, occupation, location, picturePath }; // עיצוב האובייקטים של החברים לפורמט מסוים
-      }
-    );
-    res.status(200).json(formattedFriends); // שליחת רשימת החברים המפורמטת כתגובה במצב 200 (הצלחה)
+    
+    const formattedFollowing = following
+      .filter(Boolean) // מסיר ערכי null
+      .map(({ _id, firstName, lastName, occupation, location, picturePath }) => ({
+        _id, firstName, lastName, occupation, location, picturePath
+      }));
+    console.log("!!!!!!!!!!!!!!!!!!!", following)
+
+    res.status(200).json(formattedFollowing); // שליחת רשימת החברים המפורמטת כתגובה במצב 200 (הצלחה)
   } catch (err) {
     res.status(404).json({ message: err.message }); // שליחת הודעת שגיאה במצב 404 אם ישנה בעיה
   }
 };
 
-/* UPDATE */
-export const addRemoveFriend = async (req, res) => {
+export const getUserFollowers = async (req, res) => {
   try {
-    const { id, friendId } = req.params; // הוצאת מזהי המשתמש והחבר מהפרמטרים של הבקשה
-    const user = await User.findById(id); // חיפוש המשתמש לפי מזהה
-    const friend = await User.findById(friendId); // חיפוש החבר לפי מזהה
+    const { id } = req.params;
+    const user = await User.findById(id);
 
-    if (user.friends.includes(friendId)) {
-      user.friends = user.friends.filter((id) => id !== friendId); // הסרת החבר מרשימת החברים אם הוא כבר קיים בה
-      friend.friends = friend.friends.filter((id) => id !== id); // הסרת המשתמש מרשימת החברים של החבר
+    const followers = await Promise.all(
+      user.followers.map((id) => User.findById(id))
+    );
+    const formattedFollowers = followers.map(
+      ({ _id, firstName, lastName, occupation, location, picturePath }) => {
+        return { _id, firstName, lastName, occupation, location, picturePath };
+      }
+    );
+    res.status(200).json(formattedFollowers);
+  } catch (err) {
+    res.status(404).json({ message: err.message });
+  }
+};
+
+export const addRemoveFollowing = async (req, res) => {
+  try {
+    const { id, followingId } = req.params; // הוצאת מזהי המשתמש והחבר מהפרמטרים של הבקשה
+    const user = await User.findById(id); // חיפוש המשתמש לפי מזהה
+    const follow = await User.findById(followingId); // חיפוש החבר לפי מזהה
+
+    if (user.following.includes(followingId)) {
+      user.following = user.following.filter((id) => id !== followingId); // הסרת החבר מרשימת החברים אם הוא כבר קיים בה
+      follow.followers = follow.followers.filter((id) => id !== id); // הסרת המשתמש מרשימת החברים של החבר
     } else {
-      user.friends.push(friendId); // הוספת החבר לרשימת החברים אם הוא לא קיים בה
-      friend.friends.push(id); // הוספת המשתמש לרשימת החברים של החבר
+      user.following.push(followingId); // הוספת החבר לרשימת החברים אם הוא לא קיים בה
+      follow.followers.push(id); // הוספת המשתמש לרשימת החברים של החבר
     }
     await user.save(); // שמירת השינויים במשתמש
-    await friend.save(); // שמירת השינויים בחבר
+    await follow.save(); // שמירת השינויים בחבר
 
-    const friends = await Promise.all(
-      user.friends.map((id) => User.findById(id)) // חיפוש כל החברים החדשים של המשתמש לפי מזהים
+    const following = await Promise.all(
+      user.following.map((id) => User.findById(id)) // חיפוש כל החברים החדשים של המשתמש לפי מזהים
     );
-    const formattedFriends = friends.map(
+    const formattedFollowing = following.map(
       ({ _id, firstName, lastName, occupation, location, picturePath }) => {
         return { _id, firstName, lastName, occupation, location, picturePath }; // עיצוב האובייקטים של החברים לפורמט מסוים
       }
     );
 
-    res.status(200).json(formattedFriends); // שליחת רשימת החברים החדשה המפורמטת כתגובה במצב 200 (הצלחה)
+    res.status(200).json(formattedFollowing); // שליחת רשימת החברים החדשה המפורמטת כתגובה במצב 200 (הצלחה)
   } catch (err) {
     res.status(404).json({ message: err.message }); // שליחת הודעת שגיאה במצב 404 אם ישנה בעיה
   }
 };
 
-export const updateUser = async (req, res) => {
-
+export const removeFollower = async (req, res) => {
   try {
+    const { id, followerId } = req.params;
+    const user = await User.findById(id);
+    const follower = await User.findById(followerId);
 
-    console.log("Received update request for user ID:", req.params.id);
-    console.log("Update data:", req.body);
-    const { id } = req.params;
-    const { firstName, lastName, email, location, occupation } = req.body;
- 
+    user.followers = user.followers.filter((fId) => fId !== followerId);
+    follower.following = follower.following.filter((fId) => fId !== id);
 
-    const updateFields = {};
-    if (firstName) updateFields.firstName = firstName;
-    if (lastName) updateFields.lastName = lastName;
-    if (email) updateFields.email = email;
-    if (location) updateFields.location = location;
-    if (occupation) updateFields.occupation = occupation;
-    console.log("Fields to update:", updateFields);
+    await user.save();
+    await follower.save();
 
-    const updatedUser = await User.findByIdAndUpdate(
-      id,
-      { $set: updateFields },
-      { new: true, runValidators: true }
+    const followers = await Promise.all(
+      user.followers.map((id) => User.findById(id))
+    );
+    const formattedFollowers = followers.map(
+      ({ _id, firstName, lastName, occupation, location, picturePath }) => {
+        return { _id, firstName, lastName, occupation, location, picturePath };
+      }
     );
 
-    if (!updatedUser) {
-      return res.status(404).json({ message: "משתמש לא נמצא" });
-    }
-    console.log("User updated successfully:", updatedUser);
-    res.status(200).json(updatedUser);
+    res.status(200).json(formattedFollowers);
   } catch (err) {
-    console.error("Error updating user:", err);
-    res.status(500).json({ message: err.message, stack: err.stack });
+    res.status(404).json({ message: err.message });
   }
 };
+

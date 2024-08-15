@@ -2,6 +2,9 @@ import bcrypt from "bcrypt"; // יבוא של ספריית bcrypt לצורך ה�
 import jwt from "jsonwebtoken"; // יבוא של ספריית jsonwebtoken ליצירת טוקנים
 import User from "../models/User.js"; // יבוא של מודל המשתמש שנוצר במסד הנתונים
 import dotenv from 'dotenv'; // יבוא של dotenv לטעינת משתני סביבה
+import multer from "multer";
+import Post from "../models/Post.js"; // ייבוא המודל של הפוסטים
+
 
 dotenv.config(); // טוען את משתני הסביבה מקובץ .env
 
@@ -44,6 +47,7 @@ export const register = async (req, res) => {
       occupation,
       viewedProfile: Math.floor(Math.random() * 10000),
       impressions: Math.floor(Math.random() * 10000),
+      stars: 0,
     });
 
     // שמירת המשתמש החדש במסד הנתונים
@@ -104,10 +108,13 @@ export const login = async (req, res) => { // פונקציה להתחברות מ
       lastName: user.lastName,
       email: user.email,
       friends: user.friends,
+      followers: user.followers,
+      following: user.following,
       location: user.location,
       occupation: user.occupation,
       viewedProfile: user.viewedProfile,
       impressions: user.impressions,
+      stars: user.stars,
       phoneNumber: user.phoneNumber,  // הוספת שדה זה גם בתשובה
       picturePath: user.picturePath, 
     };
@@ -120,3 +127,141 @@ export const login = async (req, res) => { // פונקציה להתחברות מ
     res.status(500).json({ error: err.message }); // שליחת תשובת שגיאה עם הודעת השגיאה
   }
 };
+
+
+// הגדרת Multer לטיפול בקבצים
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "public/assets");
+  },
+  filename: function (req, file, cb) {
+    cb(null, file.originalname);
+  },
+});
+const upload = multer({ storage });
+
+// הוספת ה-Upload Middleware
+export const updateUser = [
+  upload.single("picture"), // שם השדה צריך להיות "picture" כמו שנשלח מ-FormData
+  async (req, res) => {
+    try {
+      console.log("Received update request for user ID:", req.params.id);
+      console.log("Update data:", req.body);
+
+      const { id } = req.params;
+      const { firstName, lastName, email, location, occupation, phoneNumber, password } = req.body;
+      const updateFields = {};
+
+      // בדוק אם האימייל קיים כבר במערכת למשתמש אחר
+      if (email) {
+        const existingUserByEmail = await User.findOne({ email });
+        if (existingUserByEmail && existingUserByEmail._id.toString() !== id) {
+          return res.status(400).json({ message: "Email is already in use by another user." });
+        }
+        updateFields.email = email;
+      }
+
+      // בדוק אם מספר הטלפון קיים כבר במערכת למשתמש אחר
+      if (phoneNumber) {
+        const existingUserByPhoneNumber = await User.findOne({ phoneNumber });
+        if (existingUserByPhoneNumber && existingUserByPhoneNumber._id.toString() !== id) {
+          return res.status(400).json({ message: "Phone number is already in use by another user." });
+        }
+        updateFields.phoneNumber = phoneNumber;
+      }
+
+      // עדכון שדות המשתמש אם הם ניתנים
+      if (firstName) updateFields.firstName = firstName;
+      if (lastName) updateFields.lastName = lastName;
+      if (location) updateFields.location = location;
+      if (occupation) updateFields.occupation = occupation;
+
+      // הצפנת הסיסמה רק אם היא חדשה
+      if (password) {
+        // קוד לבדוק אם הסיסמה כבר מוצפנת (למשל, אם יש לה לפחות 60 תווים)
+        const isEncrypted = password.length >= 60;
+        if (!isEncrypted) {
+          const salt = await bcrypt.genSalt(10);
+          updateFields.password = await bcrypt.hash(password, salt);
+        } else {
+          updateFields.password = password; // השתמש בסיסמה כפי שהיא אם היא כבר מוצפנת
+        }
+      }
+
+      // עדכון קובץ התמונה אם נשלח
+      if (req.file) updateFields.picturePath = req.file.filename;
+
+      console.log("Fields to update:", updateFields);
+
+      // עדכון המשתמש
+      const updatedUser = await User.findByIdAndUpdate(
+        id,
+        { $set: updateFields },
+        { new: true, runValidators: true }
+      );
+
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      console.log("User updated successfully:", updatedUser);
+      res.status(200).json(updatedUser);
+    } catch (err) {
+      console.error("Error updating user:", err);
+      res.status(500).json({ message: err.message, stack: err.stack });
+    }
+  },
+];
+
+
+
+/* UPDATE */
+// פונקציה למחיקת 
+export const deleteUser = async (req, res) => {
+  try {
+    const { id } = req.params; // קבלת מזהה המשתמש מהפרמטרים של הבקשה
+    console.log(`Attempting to delete user with ID: ${id}`);
+
+    // מציאת המשתמש לפי מזהה
+    const user = await User.findById(id); 
+    if (!user) {
+      console.log(`User with ID ${id} not found.`);
+      return res.status(404).json({ message: "User not found" });
+    }
+
+
+
+    console.log(`User with ID ${id} found. Proceeding to delete.`);
+    // מחיקת המשתמש מהמאגר
+    await User.findByIdAndDelete(id);
+
+    res.status(200).json({ message: "User deleted successfully" }); // החזרת הצלחה עם סטטוס 200
+  } catch (err) {
+    console.error(`Error deleting user ${id}:`, err);
+    res.status(500).json({ message: (`Internal server error ${id}`) }); // החזרת שגיאה עם סטטוס 500 (שגיאת שרת)
+  }
+};
+
+
+export const deletePostsByUserId = async (req, res) => {
+  try {
+    const { id } = req.params; // קבלת מזהה המשתמש מהפרמטרים של הבקשה
+
+    // מציאת כל הפוסטים שה- userId שלהם תואם ל-id שנשלח
+    const posts = await Post.find({ userId: id });
+
+    // אם אין פוסטים עם ה-userId הספציפי, החזר שגיאה מתאימה
+    if (posts.length === 0) {
+      return res.status(404).json({ message: "No posts found for this user" });
+    }
+
+    // מחיקת כל הפוסטים שנמצאו
+    await Post.deleteMany({ userId: id });
+
+    res.status(200).json({ message: "Posts deleted successfully" }); // החזרת הצלחה עם סטטוס 200
+  } catch (err) {
+    console.error("Error deleting posts:", err);
+    res.status(500).json({ message: err.message }); // החזרת שגיאה עם סטטוס 500 (שגיאת שרת)
+  }
+};
+

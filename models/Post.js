@@ -40,6 +40,16 @@ const postSchema = mongoose.Schema(
       type: Array, // סוג השדה הוא מערך (Array)
       default: [], // ברירת מחדל היא מערך ריק
     },
+
+    userStars: {
+      type: Number,
+      default: 0
+    },
+
+    region: {
+      type: String, // סוג השדה הוא מחרוזת (String)
+      required: true, // שדה חובה - חייב להיות מוגדר בעת יצירת מסמך חדש
+    },
   },
   { timestamps: true } // יוסיף באופן אוטומטי שדות createdAt ו-updatedAt לכל מסמך
 );

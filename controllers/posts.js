@@ -5,9 +5,11 @@ import User from "../models/User.js"; // ייבוא המודל של המשתמש
 // פונקציה ליצירת פוסט חדש
 export const createPost = async (req, res) => {
   try {
-    console.log("Received data:", req.body);
-    const { userId, description, picturePath, title, location } = req.body; // קבלת הפרטים מהבקשה
-    const user = await User.findById(userId); // מציאת המשתמש לפי מזהה
+    const { userId, description, picturePath, title, location, region } = req.body;
+    const user = await User.findById(userId);
+
+    console.log("Region received:", region); // הדפסת הערך של region
+
     const newPost = new Post({
       userId,
       firstName: user.firstName,
@@ -16,78 +18,359 @@ export const createPost = async (req, res) => {
       userPicturePath: user.picturePath,
       picturePath,
       title,
+      userStars: user.userStars,
       location,
-      likes: {}, // לייקים ריקים בהתחלה
+      region, // שמירת האזור בבסיס הנתונים
+      likes: {},
       saved: {},
       shared: {},
-      comments: [], // תגובות ריקות בהתחלה
+      comments: [],
     });
-    await newPost.save(); // שמירת הפוסט החדש בבסיס הנתונים
-    const post = await Post.find(); // מציאת כל הפוסטים
-    res.status(201).json(post); // החזרת כל הפוסטים עם סטטוס 201 (נוצר)
+
+    await newPost.save();
+    const post = await Post.find();
+    res.status(201).json(post);
   } catch (err) {
-    console.error("Error creating post:", err);
-    res.status(409).json({ message: err.message }); // החזרת שגיאה עם סטטוס 409 (ניגוד)
+    res.status(409).json({ message: err.message });
   }
 };
 
- 
 /* READ */
-// פונקציה לקבלת כל הפוסטים בפיד
-export const getFeedPosts = async (req, res) => {
+// פונקציה לקבלת כל הפוסטים בפיד עם אפשרות לחיפוש לפי מונח חיפוש (searchTerm)
+export const getAllPosts = async (req, res) => {
   try {
-    const post = await Post.find(); // מציאת כל הפוסטים
-    res.status(200).json(post); // החזרת כל הפוסטים עם סטטוס 200 (הצלחה)
-  } catch (err) {
-    res.status(404).json({ message: err.message }); // החזרת שגיאה עם סטטוס 404 (לא נמצא)
-  }
-};
+    const { searchTerm } = req.query; // קבלת מונח החיפוש מתוך פרמטרי ה-query של הבקשה
 
+    let query = {};
 
-// פונקציה לקבלת כל הפוסטים של משתמש ספציפי לפי מזהה משתמש
-export const getUserPosts = async (req, res) => {
-  try {
-    const { userId } = req.params; // קבלת מזהה המשתמש מהפרמטרים של הבקשה
-    const post = await Post.find({ userId }); // מציאת כל הפוסטים של המשתמש
-    res.status(200).json(post); // החזרת כל הפוסטים עם סטטוס 200 (הצלחה)
-  } catch (err) {
-    res.status(404).json({ message: err.message }); // החזרת שגיאה עם סטטוס 404 (לא נמצא)
-  }
-};
+    if (searchTerm) {
+      query = {
+        $or: [
+          { title: { $regex: searchTerm, $options: "i" } }, // חיפוש בכותרת
+          { description: { $regex: searchTerm, $options: "i" } }, // חיפוש בתיאור
+          { firstName: { $regex: searchTerm, $options: "i" } }, // חיפוש בשם פרטי
+          { lastName: { $regex: searchTerm, $options: "i" } }, // חיפוש בשם משפחה
+          { location: { $regex: searchTerm, $options: "i" } }, // חיפוש במיקום
+          {
+            $expr: {
+              $regexMatch: {
+                input: { $concat: ["$firstName", " ", "$lastName"] },
+                regex: searchTerm,
+                options: "i",
+              },
+            },
+          }, // חיפוש בשמות מחוברים
+        ],
+      };
+    }
 
-  // מציאת כל הפוסטים שהמשתמש עשה להם לייק
-export const getLikedPosts = async (req, res) => {
-  try {
-    const { userId } = req.params; // קבלת מזהה המשתמש מהפרמטרים של הבקשה
-    const posts = await Post.find({ [`likes.${userId}`]: true });
+    const posts = await Post.find(query); // מציאת כל הפוסטים שמתאימים למונח החיפוש (אם קיים)
     res.status(200).json(posts); // החזרת כל הפוסטים עם סטטוס 200 (הצלחה)
   } catch (err) {
     res.status(404).json({ message: err.message }); // החזרת שגיאה עם סטטוס 404 (לא נמצא)
   }
 };
 
+/* READ */
+// פונקציה לקבלת כל הפוסטים לפי region ומונח חיפוש (searchTerm)
+export const getPostsByRegion = async (req, res) => {
+  try {
+    const { region, searchTerm } = req.query; // קבלת האזור והמונח חיפוש מתוך פרמטרי ה-query של הבקשה
 
-  // מציאת כל הפוסטים שהמשתמש שמר  
-  export const getSavedPosts = async (req, res) => {
-    try {
-      const { userId } = req.params; // קבלת מזהה המשתמש מהפרמטרים של הבקשה
-      const posts = await Post.find({ [`saved.${userId}`]: true });
-      res.status(200).json(posts); // החזרת כל הפוסטים עם סטטוס 200 (הצלחה)
-    } catch (err) {
-      res.status(404).json({ message: err.message }); // החזרת שגיאה עם סטטוס 404 (לא נמצא)
+    if (!region) {
+      return res.status(400).json({ message: "Region is required" }); // החזרת שגיאה אם לא נבחר אזור
     }
-  };
 
-    // מציאת כל הפוסטים שהמשתמש שמר  
-    export const getSharedPosts = async (req, res) => {
-      try {
-        const { userId } = req.params; // קבלת מזהה המשתמש מהפרמטרים של הבקשה
-        const posts = await Post.find({ [`shared.${userId}`]: true });
-        res.status(200).json(posts); // החזרת כל הפוסטים עם סטטוס 200 (הצלחה)
-      } catch (err) {
-        res.status(404).json({ message: err.message }); // החזרת שגיאה עם סטטוס 404 (לא נמצא)
-      }
-    };
+    let query = { region };
+
+    if (searchTerm) {
+      query = {
+        $or: [
+          { title: { $regex: searchTerm, $options: "i" } }, // חיפוש בכותרת
+          { description: { $regex: searchTerm, $options: "i" } }, // חיפוש בתיאור
+          { firstName: { $regex: searchTerm, $options: "i" } }, // חיפוש בשם פרטי
+          { lastName: { $regex: searchTerm, $options: "i" } }, // חיפוש בשם משפחה
+          { location: { $regex: searchTerm, $options: "i" } }, // חיפוש במיקום
+          {
+            $expr: {
+              $regexMatch: {
+                input: { $concat: ["$firstName", " ", "$lastName"] },
+                regex: searchTerm,
+                options: "i",
+              },
+            },
+          }, // חיפוש בשמות מחוברים
+        ],
+      };
+    }
+
+    const posts = await Post.find(query); // מציאת כל הפוסטים שמתאימים לאזור ולמונח החיפוש
+    res.status(200).json(posts); // החזרת כל הפוסטים עם סטטוס 200 (הצלחה)
+  } catch (err) {
+    res.status(404).json({ message: err.message }); // החזרת שגיאה עם סטטוס 404 (לא נמצא)
+  }
+};
+
+/* READ */
+// פונקציה לקבלת כל הפוסטים בפיד עם אפשרות לחיפוש לפי מונח חיפוש (searchTerm)
+export const getFeedPosts = async (req, res) => {
+  try {
+    const { searchTerm } = req.query; // קבלת מונח החיפוש מתוך פרמטרי ה-query של הבקשה
+
+    let query = {};
+
+    if (searchTerm) {
+      query = {
+        $or: [
+          { title: { $regex: searchTerm, $options: "i" } }, // חיפוש בכותרת
+          { description: { $regex: searchTerm, $options: "i" } }, // חיפוש בתיאור
+          { firstName: { $regex: searchTerm, $options: "i" } }, // חיפוש בשם פרטי
+          { lastName: { $regex: searchTerm, $options: "i" } }, // חיפוש בשם משפחה
+          { location: { $regex: searchTerm, $options: "i" } }, // חיפוש במיקום
+          {
+            $expr: {
+              $regexMatch: {
+                input: { $concat: ["$firstName", " ", "$lastName"] },
+                regex: searchTerm,
+                options: "i",
+              },
+            },
+          }, // חיפוש בשמות מחוברים
+        ],
+      };
+    }
+
+    const posts = await Post.find(query); // מציאת כל הפוסטים שמתאימים למונח החיפוש (אם קיים)
+    res.status(200).json(posts); // החזרת כל הפוסטים עם סטטוס 200 (הצלחה)
+  } catch (err) {
+    res.status(404).json({ message: err.message }); // החזרת שגיאה עם סטטוס 404 (לא נמצא)
+  }
+};
+
+/* READ */
+// פונקציה לקבלת כל הפוסטים של משתמש ספציפי לפי מזהה משתמש ומונח חיפוש
+export const getUserPosts = async (req, res) => {
+  try {
+    const { userId } = req.params; // קבלת מזהה המשתמש מהפרמטרים של הבקשה
+    const { searchTerm } = req.query; // קבלת מונח החיפוש מתוך פרמטרי ה-query של הבקשה
+
+    let query = { userId };
+
+    if (searchTerm) {
+      query = {
+        $or: [
+          { title: { $regex: searchTerm, $options: "i" } }, // חיפוש בכותרת
+          { description: { $regex: searchTerm, $options: "i" } }, // חיפוש בתיאור
+          { firstName: { $regex: searchTerm, $options: "i" } }, // חיפוש בשם פרטי
+          { lastName: { $regex: searchTerm, $options: "i" } }, // חיפוש בשם משפחה
+          { location: { $regex: searchTerm, $options: "i" } }, // חיפוש במיקום
+          {
+            $expr: {
+              $regexMatch: {
+                input: { $concat: ["$firstName", " ", "$lastName"] },
+                regex: searchTerm,
+                options: "i",
+              },
+            },
+          }, // חיפוש בשמות מחוברים
+        ],
+      };
+    }
+
+    const posts = await Post.find(query); // מציאת כל הפוסטים של המשתמש שמתאימים למונח החיפוש (אם קיים)
+    res.status(200).json(posts); // החזרת כל הפוסטים עם סטטוס 200 (הצלחה)
+  } catch (err) {
+    res.status(404).json({ message: err.message }); // החזרת שגיאה עם סטטוס 404 (לא נמצא)
+  }
+};
+
+/* READ */
+// פונקציה למציאת כל הפוסטים שהמשתמש עשה להם לייק
+export const getLikedPosts = async (req, res) => {
+  try {
+    const { userId } = req.params; // קבלת מזהה המשתמש מהפרמטרים של הבקשה
+    const { searchTerm } = req.query; // קבלת מונח החיפוש מתוך פרמטרי ה-query של הבקשה
+
+    let query = { [`likes.${userId}`]: true };
+
+    if (searchTerm) {
+      query = {
+        $or: [
+          { title: { $regex: searchTerm, $options: "i" } }, // חיפוש בכותרת
+          { description: { $regex: searchTerm, $options: "i" } }, // חיפוש בתיאור
+          { firstName: { $regex: searchTerm, $options: "i" } }, // חיפוש בשם פרטי
+          { lastName: { $regex: searchTerm, $options: "i" } }, // חיפוש בשם משפחה
+          { location: { $regex: searchTerm, $options: "i" } }, // חיפוש במיקום
+          {
+            $expr: {
+              $regexMatch: {
+                input: { $concat: ["$firstName", " ", "$lastName"] },
+                regex: searchTerm,
+                options: "i",
+              },
+            },
+          }, // חיפוש בשמות מחוברים
+        ],
+      };
+    }
+
+    const posts = await Post.find(query);
+    res.status(200).json(posts); // החזרת כל הפוסטים עם סטטוס 200 (הצלחה)
+  } catch (err) {
+    res.status(404).json({ message: err.message }); // החזרת שגיאה עם סטטוס 404 (לא נמצא)
+  }
+};
+
+/* READ */
+// פונקציה למציאת כל הפוסטים שהמשתמש שמר
+export const getSavedPosts = async (req, res) => {
+  try {
+    const { userId } = req.params; // קבלת מזהה המשתמש מהפרמטרים של הבקשה
+    const { searchTerm } = req.query; // קבלת מונח החיפוש מתוך פרמטרי ה-query של הבקשה
+
+    let query = { [`saved.${userId}`]: true };
+
+    if (searchTerm) {
+      query = {
+        $or: [
+          { title: { $regex: searchTerm, $options: "i" } }, // חיפוש בכותרת
+          { description: { $regex: searchTerm, $options: "i" } }, // חיפוש בתיאור
+          { firstName: { $regex: searchTerm, $options: "i" } }, // חיפוש בשם פרטי
+          { lastName: { $regex: searchTerm, $options: "i" } }, // חיפוש בשם משפחה
+          { location: { $regex: searchTerm, $options: "i" } }, // חיפוש במיקום
+          {
+            $expr: {
+              $regexMatch: {
+                input: { $concat: ["$firstName", " ", "$lastName"] },
+                regex: searchTerm,
+                options: "i",
+              },
+            },
+          }, // חיפוש בשמות מחוברים
+        ],
+      };
+    }
+    const posts = await Post.find(query);
+    res.status(200).json(posts); // החזרת כל הפוסטים עם סטטוס 200 (הצלחה)
+  } catch (err) {
+    res.status(404).json({ message: err.message }); // החזרת שגיאה עם סטטוס 404 (לא נמצא)
+  }
+};
+
+/* READ */
+// פונקציה למציאת כל הפוסטים שהמשתמש שיתף
+export const getSharedPosts = async (req, res) => {
+  try {
+    const { userId } = req.params; // קבלת מזהה המשתמש מהפרמטרים של הבקשה
+    const { searchTerm } = req.query; // קבלת מונח החיפוש מתוך פרמטרי ה-query של הבקשה
+
+    let query = { [`shared.${userId}`]: true };
+
+    if (searchTerm) {
+      query = {
+        $or: [
+          { title: { $regex: searchTerm, $options: "i" } }, // חיפוש בכותרת
+          { description: { $regex: searchTerm, $options: "i" } }, // חיפוש בתיאור
+          { firstName: { $regex: searchTerm, $options: "i" } }, // חיפוש בשם פרטי
+          { lastName: { $regex: searchTerm, $options: "i" } }, // חיפוש בשם משפחה
+          { location: { $regex: searchTerm, $options: "i" } }, // חיפוש במיקום
+          {
+            $expr: {
+              $regexMatch: {
+                input: { $concat: ["$firstName", " ", "$lastName"] },
+                regex: searchTerm,
+                options: "i",
+              },
+            },
+          }, // חיפוש בשמות מחוברים
+        ],
+      };
+    }
+
+    const posts = await Post.find(query);
+    res.status(200).json(posts); // החזרת כל הפוסטים עם סטטוס 200 (הצלחה)
+  } catch (err) {
+    res.status(404).json({ message: err.message }); // החזרת שגיאה עם סטטוס 404 (לא נמצא)
+  }
+};
+
+/* READ */
+// פונקציה לקבלת כל הפוסטים בפיד עם אפשרות לחיפוש לפי מונח חיפוש (searchTerm) עבור אורחים
+export const getAllGuestPosts = async (req, res) => {
+  try {
+    const { searchTerm } = req.query;
+    console.log("Search term received:", searchTerm); // בדיקת ה- searchTerm שהתקבל
+
+    let query = {};
+
+    if (searchTerm) {
+      query = {
+        $or: [
+          { title: { $regex: searchTerm, $options: "i" } }, // חיפוש בכותרת
+          { description: { $regex: searchTerm, $options: "i" } }, // חיפוש בתיאור
+          { firstName: { $regex: searchTerm, $options: "i" } }, // חיפוש בשם פרטי
+          { lastName: { $regex: searchTerm, $options: "i" } }, // חיפוש בשם משפחה
+          { location: { $regex: searchTerm, $options: "i" } }, // חיפוש במיקום
+          {
+            $expr: {
+              $regexMatch: {
+                input: { $concat: ["$firstName", " ", "$lastName"] },
+                regex: searchTerm,
+                options: "i",
+              },
+            },
+          }, // חיפוש בשמות מחוברים
+        ],
+      };
+    }
+
+    const posts = await Post.find(query).select("title description location picturePath userPicturePath");
+    res.status(200).json(posts);
+  } catch (err) {
+    res.status(404).json({ message: err.message });
+  }
+};
+
+
+/* READ */
+// פונקציה לקבלת כל הפוסטים לפי region ומונח חיפוש (searchTerm) עבור אורחים
+export const getGuestPostsByRegion = async (req, res) => {
+  try {
+    const { region, searchTerm } = req.query;
+
+    if (!region) {
+      return res.status(400).json({ message: "Region is required" });
+    }
+
+    let query = { region };
+
+    if (searchTerm) {
+      query = {
+        $or: [
+          { title: { $regex: searchTerm, $options: "i" } }, // חיפוש בכותרת
+          { description: { $regex: searchTerm, $options: "i" } }, // חיפוש בתיאור
+          { firstName: { $regex: searchTerm, $options: "i" } }, // חיפוש בשם פרטי
+          { lastName: { $regex: searchTerm, $options: "i" } }, // חיפוש בשם משפחה
+          { location: { $regex: searchTerm, $options: "i" } }, // חיפוש במיקום
+          {
+            $expr: {
+              $regexMatch: {
+                input: { $concat: ["$firstName", " ", "$lastName"] },
+                regex: searchTerm,
+                options: "i",
+              },
+            },
+          }, // חיפוש בשמות מחוברים
+        ],
+      };
+    }
+
+    const posts = await Post.find(query).select("title description location picturePath userPicturePath"); // בחירת השדות המתאימים לאורחים
+    res.status(200).json(posts);
+  } catch (err) {
+    res.status(404).json({ message: err.message });
+  }
+};
 
 
 /* UPDATE */
@@ -111,6 +394,33 @@ export const likePost = async (req, res) => {
       { likes: post.likes }, // עדכון הלייקים בפוסט
       { new: true } // מחזירים את הפוסט המעודכן
     );
+    
+    // מציאת המשתמש לפי מזהה
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    // עדכון מספר הכוכבים של המשתמש
+    if (isLiked) {
+      user.stars -= 1; // אם הלייק הוסר, מורידים כוכב
+    } else {
+      user.stars += 1; // אם הלייק נוסף, מוסיפים כוכב
+    }
+    // שמירת השינויים במודל המשתמש
+    await user.save();
+
+    const userPosts = await Post.find({ userId: post.userId });
+    
+    // עדכון userStars לכל הפוסטים של המשתמש
+    userPosts.forEach(async (userPost) => {
+      if (isLiked) {
+        userPost.userStars -= 1; // אם הלייק הוסר, מורידים כוכב מכל פוסט
+      } else {
+        userPost.userStars += 1; // אם הלייק נוסף, מוסיפים כוכב לכל פוסט
+      }
+      await userPost.save(); // שמירת השינויים בכל פוסט
+    });
+
     console.log("Post updated:", updatedPost);
     res.status(200).json(updatedPost); // החזרת הפוסט המעודכן עם סטטוס 200 (הצלחה)
   } catch (err) {
@@ -140,6 +450,34 @@ export const savePost = async (req, res) => {
       { saved: post.saved }, // עדכון הלייקים בפוסט
       { new: true } // מחזירים את הפוסט המעודכן
     );
+
+    const userPosts = await Post.find({ userId: post.userId });
+    
+    // עדכון userStars לכל הפוסטים של המשתמש
+    userPosts.forEach(async (userPost) => {
+      if (isSaved) {
+        userPost.userStars -= 1; // אם הלייק הוסר, מורידים כוכב מכל פוסט
+      } else {
+        userPost.userStars += 1; // אם הלייק נוסף, מוסיפים כוכב לכל פוסט
+      }
+      await userPost.save(); // שמירת השינויים בכל פוסט
+    });
+
+       // מציאת המשתמש לפי מזהה
+       const user = await User.findById(userId);
+       if (!user) {
+         return res.status(404).json({ message: "User not found" });
+       }
+   
+       // עדכון מספר הכוכבים של המשתמש
+       if (isSaved) {
+         user.stars -= 1; // אם הלייק הוסר, מורידים כוכב
+       } else {
+         user.stars += 1; // אם הלייק נוסף, מוסיפים כוכב
+       }
+       // שמירת השינויים במודל המשתמש
+       await user.save();
+
     console.log("Post updated:", updatedPost);
     res.status(200).json(updatedPost); // החזרת הפוסט המעודכן עם סטטוס 200 (הצלחה)
   } catch (err) {
@@ -170,6 +508,22 @@ export const sharePost = async (req, res) => {
       { shared: post.shared }, // עדכון הלייקים בפוסט
       { new: true } // מחזירים את הפוסט המעודכן
     );
+
+     // מציאת המשתמש לפי מזהה
+     const user = await User.findById(userId);
+     if (!user) {
+       return res.status(404).json({ message: "User not found" });
+     }
+ 
+     // עדכון מספר הכוכבים של המשתמש
+     if (isShared) {
+       user.stars -= 1; // אם הלייק הוסר, מורידים כוכב
+     } else {
+       user.stars += 1; // אם הלייק נוסף, מוסיפים כוכב
+     }
+     // שמירת השינויים במודל המשתמש
+     await user.save();
+
     console.log("Post updated:", updatedPost);
     res.status(200).json(updatedPost); // החזרת הפוסט המעודכן עם סטטוס 200 (הצלחה)
   } catch (err) {
@@ -237,5 +591,8 @@ export const updatePost = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+
+
 
 
