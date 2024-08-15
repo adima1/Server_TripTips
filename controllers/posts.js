@@ -236,6 +236,63 @@ export const getSharedPosts = async (req, res) => {
   }
 };
 
+/* READ */
+// פונקציה לקבלת כל הפוסטים בפיד עם אפשרות לחיפוש לפי מונח חיפוש (searchTerm) עבור אורחים
+export const getAllGuestPosts = async (req, res) => {
+  try {
+    const { searchTerm } = req.query;
+    console.log("Search term received:", searchTerm); // בדיקת ה- searchTerm שהתקבל
+
+    let query = {};
+
+    if (searchTerm) {
+      query = {
+        $or: [
+          { title: { $regex: searchTerm, $options: "i" } },
+          { description: { $regex: searchTerm, $options: "i" } },
+          { location: { $regex: searchTerm, $options: "i" } },
+        ],
+      };
+    }
+
+    const posts = await Post.find(query).select("title description location picturePath userPicturePath");
+    res.status(200).json(posts);
+  } catch (err) {
+    res.status(404).json({ message: err.message });
+  }
+};
+
+
+/* READ */
+// פונקציה לקבלת כל הפוסטים לפי region ומונח חיפוש (searchTerm) עבור אורחים
+export const getGuestPostsByRegion = async (req, res) => {
+  try {
+    const { region, searchTerm } = req.query;
+
+    if (!region) {
+      return res.status(400).json({ message: "Region is required" });
+    }
+
+    let query = { region };
+
+    if (searchTerm) {
+      query = {
+        ...query,
+        $or: [
+          { title: { $regex: searchTerm, $options: "i" } },
+          { description: { $regex: searchTerm, $options: "i" } },
+          { location: { $regex: searchTerm, $options: "i" } },
+        ],
+      };
+    }
+
+    const posts = await Post.find(query).select("title description location picturePath userPicturePath"); // בחירת השדות המתאימים לאורחים
+    res.status(200).json(posts);
+  } catch (err) {
+    res.status(404).json({ message: err.message });
+  }
+};
+
 /* UPDATE */
 // פונקציה להוספת/הסרת לייק מפוסט
 export const likePost = async (req, res) => {

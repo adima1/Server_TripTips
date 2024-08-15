@@ -1,16 +1,19 @@
 import express from "express"; 
-import { getPostsByRegion, getFeedPosts, getUserPosts, likePost, savePost, sharePost, deletePost } from "../controllers/posts.js"; 
-import { getLikedPosts, getSavedPosts, getSharedPosts, updatePost} from "../controllers/posts.js";
+import { getPostsByRegion, getFeedPosts, getUserPosts, likePost, savePost, sharePost, deletePost, getAllPosts } from "../controllers/posts.js"; 
+import { getLikedPosts, getSavedPosts, getSharedPosts, updatePost } from "../controllers/posts.js";
 import { verifyToken } from "../middleware/auth.js"; 
 
 const router = express.Router(); 
 
 /* READ */
-// מסלול שמחזיר את כל הפוסטים בפיד
+// מסלול שמחזיר את כל הפוסטים בפיד למשתמשים רשומים
 router.get("/", verifyToken, getFeedPosts); 
 
+// מסלול שמחזיר את כל הפוסטים לאורחים (חיפוש כללי)
+router.get("/guest", getAllPosts); 
+
 // הבאת פוסטים לפי אזור - גישה פתוחה למשתמשים לא רשומים
-router.get("/region", getPostsByRegion); // שינינו כך שלא ידרוש אימות
+router.get("/region", getPostsByRegion);
 
 // מסלול שמחזיר את כל הפוסטים של משתמש ספציפי לפי userId
 router.get("/:userId/posts", verifyToken, getUserPosts); 
@@ -40,4 +43,4 @@ router.delete("/:id/delete", verifyToken, deletePost);
 
 router.patch("/:id/update", verifyToken, updatePost); 
 
-export default router; 
+export default router;
