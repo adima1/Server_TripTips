@@ -107,3 +107,80 @@ export const removeFollower = async (req, res) => {
   }
 };
 
+export const getAllUsersSortedByStars = async (req, res) => {
+  try {
+    const users = await User.find().sort({ stars: -1 }); // מיון לפי כוכבים
+    res.status(200).json(users);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const searchUsers = async (req, res) => {
+  try {
+    const { searchTerm } = req.query;
+
+    if (!searchTerm) {
+      return res.status(200).json([]);
+    }
+
+    const users = await User.find({
+      $or: [
+        { firstName: { $regex: searchTerm, $options: "i" } },
+        { lastName: { $regex: searchTerm, $options: "i" } },
+        { occupation: { $regex: searchTerm, $options: "i" } },
+        {
+          $expr: {
+            $regexMatch: {
+              input: { $concat: ["$firstName", " ", "$lastName"] },
+              regex: searchTerm,
+              options: "i",
+            },
+          },
+        },
+      ],
+    })
+    .sort({ stars: -1 })
+    .select("firstName lastName occupation picturePath stars");
+
+    res.status(200).json(users);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+
+// New function to get all users sorted by stars
+// export const getAllUsersSortedByStars = async (req, res) => {
+//   try {
+//     const users = await User.find({}).sort({ stars: -1 }); // Fetching all users and sorting by stars in descending order
+//     const formattedUsers = users.map(
+//       ({ _id, firstName, lastName, occupation, location, picturePath, stars }) => {
+//         return { _id, firstName, lastName, occupation, location, picturePath, stars };
+//       }
+//     );
+//     res.status(200).json(formattedUsers); // Sending the sorted list as a response
+//   } catch (err) {
+//     res.status(500).json({ message: err.message }); // Sending an error response if something goes wrong
+//   }
+// };
+
+
+
+// // פונקציה להבאת כל המשתמשים ממוינים לפי כמות הכוכבים (מהגבוה לנמוך)
+// // פונקציה שתביא את כל המשתמשים ממוינים לפי מספר כוכבים
+// export const getAllUsersSortedByStars = async (req, res) => {
+//   try {
+//     // חיפוש כל המשתמשים והסדר לפי מספר כוכבים יורד
+//     const users = await User.find().sort({ stars: -1 });
+//     const formattedUsers = users.map(
+//       ({ _id, firstName, lastName, stars }) => {
+//         return { _id, firstName, lastName, stars }; // עיצוב הנתונים הנחוצים
+//       }
+//     );
+//     res.status(200).json(formattedUsers); // שליחת הרשימה הממוינת כתגובה
+//   } catch (err) {
+//     res.status(500).json({ message: err.message }); // שליחת הודעת שגיאה אם ישנה בעיה
+//   }
+// };
+

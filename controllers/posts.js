@@ -5,10 +5,12 @@ import User from "../models/User.js"; // ייבוא המודל של המשתמש
 // פונקציה ליצירת פוסט חדש
 export const createPost = async (req, res) => {
   try {
-    const { userId, description, picturePath, title, location, region } = req.body;
+    const { userId, description, title, location, region } = req.body;
     const user = await User.findById(userId);
 
     console.log("Region received:", region); // הדפסת הערך של region
+
+    const picturePath = req.file ? req.file.filename : ""; // קבלת שם הקובץ לאחר העלאה
 
     const newPost = new Post({
       userId,
@@ -16,7 +18,7 @@ export const createPost = async (req, res) => {
       lastName: user.lastName,
       description,
       userPicturePath: user.picturePath,
-      picturePath,
+      picturePath, // הוספת נתיב התמונה לפוסט החדש
       title,
       userStars: user.userStars,
       location,
@@ -28,9 +30,10 @@ export const createPost = async (req, res) => {
     });
 
     await newPost.save();
-    const post = await Post.find();
-    res.status(201).json(post);
+    const posts = await Post.find(); // החזרת כל הפוסטים לאחר יצירת הפוסט החדש
+    res.status(201).json(posts);
   } catch (err) {
+    console.error("Error creating post:", err);
     res.status(409).json({ message: err.message });
   }
 };
@@ -67,9 +70,36 @@ export const getAllPosts = async (req, res) => {
     const posts = await Post.find(query); // מציאת כל הפוסטים שמתאימים למונח החיפוש (אם קיים)
     res.status(200).json(posts); // החזרת כל הפוסטים עם סטטוס 200 (הצלחה)
   } catch (err) {
+    console.error("Error getting all posts:", err);
     res.status(404).json({ message: err.message }); // החזרת שגיאה עם סטטוס 404 (לא נמצא)
   }
 };
+
+
+export const getFollowingPosts = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    if (!userId) {
+      return res.status(400).json({ message: "User ID is required" });
+    }
+
+    const user = await User.findById(userId);
+    
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const following = user.following || [];
+    const posts = await Post.find({ userId: { $in: following } }).sort({ createdAt: -1 });
+
+    res.status(200).json(posts);
+  } catch (err) {
+    console.error("Error getting following posts:", err);
+    res.status(500).json({ message: err.message });
+  }
+};
+
 
 /* READ */
 // פונקציה לקבלת כל הפוסטים לפי region ומונח חיפוש (searchTerm)
@@ -107,6 +137,7 @@ export const getPostsByRegion = async (req, res) => {
     const posts = await Post.find(query); // מציאת כל הפוסטים שמתאימים לאזור ולמונח החיפוש
     res.status(200).json(posts); // החזרת כל הפוסטים עם סטטוס 200 (הצלחה)
   } catch (err) {
+    console.error("Error getting posts by region:", err);
     res.status(404).json({ message: err.message }); // החזרת שגיאה עם סטטוס 404 (לא נמצא)
   }
 };
@@ -143,6 +174,7 @@ export const getFeedPosts = async (req, res) => {
     const posts = await Post.find(query); // מציאת כל הפוסטים שמתאימים למונח החיפוש (אם קיים)
     res.status(200).json(posts); // החזרת כל הפוסטים עם סטטוס 200 (הצלחה)
   } catch (err) {
+    console.error("Error getting feed posts:", err);
     res.status(404).json({ message: err.message }); // החזרת שגיאה עם סטטוס 404 (לא נמצא)
   }
 };
@@ -180,6 +212,7 @@ export const getUserPosts = async (req, res) => {
     const posts = await Post.find(query); // מציאת כל הפוסטים של המשתמש שמתאימים למונח החיפוש (אם קיים)
     res.status(200).json(posts); // החזרת כל הפוסטים עם סטטוס 200 (הצלחה)
   } catch (err) {
+    console.error("Error getting user posts:", err);
     res.status(404).json({ message: err.message }); // החזרת שגיאה עם סטטוס 404 (לא נמצא)
   }
 };
@@ -217,6 +250,7 @@ export const getLikedPosts = async (req, res) => {
     const posts = await Post.find(query);
     res.status(200).json(posts); // החזרת כל הפוסטים עם סטטוס 200 (הצלחה)
   } catch (err) {
+    console.error("Error getting liked posts:", err);
     res.status(404).json({ message: err.message }); // החזרת שגיאה עם סטטוס 404 (לא נמצא)
   }
 };
@@ -253,6 +287,7 @@ export const getSavedPosts = async (req, res) => {
     const posts = await Post.find(query);
     res.status(200).json(posts); // החזרת כל הפוסטים עם סטטוס 200 (הצלחה)
   } catch (err) {
+    console.error("Error getting saved posts:", err);
     res.status(404).json({ message: err.message }); // החזרת שגיאה עם סטטוס 404 (לא נמצא)
   }
 };
@@ -290,6 +325,7 @@ export const getSharedPosts = async (req, res) => {
     const posts = await Post.find(query);
     res.status(200).json(posts); // החזרת כל הפוסטים עם סטטוס 200 (הצלחה)
   } catch (err) {
+    console.error("Error getting shared posts:", err);
     res.status(404).json({ message: err.message }); // החזרת שגיאה עם סטטוס 404 (לא נמצא)
   }
 };
@@ -590,8 +626,3 @@ export const updatePost = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
-
-
-
-
-

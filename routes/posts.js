@@ -1,5 +1,5 @@
 import express from "express"; // ייבוא של ספריית express
-import { getPostsByRegion, getFeedPosts, getUserPosts, likePost, savePost, sharePost, deletePost } from "../controllers/posts.js"; // ייבוא הפונקציות מהקונטרולרים של הפוסטים
+import { getPostsByRegion, getFeedPosts, getFollowingPosts, getUserPosts, likePost, savePost, sharePost, deletePost } from "../controllers/posts.js"; // ייבוא הפונקציות מהקונטרולרים של הפוסטים
 import { getLikedPosts, getSavedPosts, getSharedPosts, updatePost} from "../controllers/posts.js";
 import { verifyToken } from "../middleware/auth.js"; // ייבוא פונקציית אמצע (middleware) לאימות אסימוני
 
@@ -7,13 +7,16 @@ const router = express.Router();
 
 /* READ */
 // מסלול שמחזיר את כל הפוסטים בפיד למשתמשים רשומים
-router.get("/", verifyToken, getFeedPosts); 
+router.get("/", verifyToken, getFeedPosts);
+router.get("/allposts", verifyToken, getFeedPosts); 
+
+router.get("/:userId/following", verifyToken, getFollowingPosts);
 
 //הבאת תמונות לפי אזור
 router.get("/region", verifyToken, getPostsByRegion); // מסלול חדש לקבלת פוסטים לפי אזור
 
 // מסלול שמחזיר את כל הפוסטים של משתמש ספציפי לפי userId
-router.get("/:userId/posts", verifyToken, getUserPosts); 
+router.get("/:userId/post", verifyToken, getUserPosts);
 
 // מסלול שמחזיר את כל הפוסטים שאהבתי
 router.get("/:userId/likes", verifyToken, getLikedPosts); 

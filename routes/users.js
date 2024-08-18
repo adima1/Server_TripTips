@@ -7,6 +7,8 @@ import {
     getUserFollowers,
     addRemoveFollowing,
     removeFollower,
+    getAllUsersSortedByStars,
+    searchUsers,
 }from "../controllers/users.js";
 import { verifyToken } from "../middleware/auth.js";
 
@@ -14,6 +16,9 @@ import { verifyToken } from "../middleware/auth.js";
 const router = express.Router();
 
 /*READ*/
+router.get("/search", searchUsers);
+
+router.get("/sortedByStars", getAllUsersSortedByStars);
 router.get("/:id", verifyToken, getUser);
 // router.get("/:id/friends", verifyToken, getUserFriends);
 
